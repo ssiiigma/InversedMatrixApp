@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("InversedMatrix_ver3")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3a48d6285794a59e8fc86b5a2ebfffb865f9548b")]
 [assembly: System.Reflection.AssemblyProductAttribute("InversedMatrix_ver3")]
 [assembly: System.Reflection.AssemblyTitleAttribute("InversedMatrix_ver3")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

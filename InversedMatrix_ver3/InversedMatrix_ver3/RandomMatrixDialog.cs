@@ -16,7 +16,7 @@ namespace InversedMatrix_ver3
         // Generate random matrix Window
         public RandomMatrixDialog()
         {
-            Text = "Генерація випадкової матриці";
+            Text = @"Генерація випадкової матриці";
             Size = new Size(350, 300); 
             FormBorderStyle = FormBorderStyle.FixedDialog;
             StartPosition = FormStartPosition.CenterParent;
@@ -25,7 +25,7 @@ namespace InversedMatrix_ver3
 
             Label lblSize = new Label
             {
-                Text = "Розмір матриці (n x n):",
+                Text = @"Розмір матриці (n x n):",
                 Location = new Point(20, 20),
                 AutoSize = true
             };
@@ -39,7 +39,7 @@ namespace InversedMatrix_ver3
 
             Label lblSizeRange = new Label
             {
-                Text = "мін. 2, макс. 10",
+                Text = @"мін. 2, макс. 10",
                 Location = new Point(200, 40),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 8),
@@ -48,7 +48,7 @@ namespace InversedMatrix_ver3
 
             Label lblMin = new Label
             {
-                Text = "Мінімальне значення:",
+                Text = @"Мінімальне значення:",
                 Location = new Point(20, 70),
                 AutoSize = true
             };
@@ -64,7 +64,7 @@ namespace InversedMatrix_ver3
 
             Label lblMinRange = new Label
             {
-                Text = "мін. -100, макс. 0",
+                Text = @"мін. -100, макс. 0",
                 Location = new Point(200, 90),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 8),
@@ -73,13 +73,14 @@ namespace InversedMatrix_ver3
 
             Label lblMax = new Label
             {
-                Text = "Максимальне значення:",
+                Text = @"Максимальне значення:",
                 Location = new Point(20, 120),
                 AutoSize = true
             };
 
             NumericUpDown numMax = new NumericUpDown
             {
+                Maximum = 1000000000,
                 Value = 10,
                 DecimalPlaces = 2,
                 Location = new Point(200, 118),
@@ -88,7 +89,7 @@ namespace InversedMatrix_ver3
 
             Label lblMaxRange = new Label
             {
-                Text = "мін. 1, макс. 100",
+                Text = @"мін. 1, макс. 100",
                 Location = new Point(200, 140),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 8),
@@ -97,7 +98,7 @@ namespace InversedMatrix_ver3
 
             Button btnOk = new Button
             {
-                Text = "Згенерувати",
+                Text = @"Згенерувати",
                 DialogResult = DialogResult.OK,
                 Location = new Point(80, 190),
                 Size = new Size(100, 30),
@@ -109,7 +110,7 @@ namespace InversedMatrix_ver3
 
             Button btnCancel = new Button
             {
-                Text = "Скасувати",
+                Text = @"Скасувати",
                 DialogResult = DialogResult.Cancel,
                 Location = new Point(200, 190),
                 Size = new Size(100, 30),
@@ -129,7 +130,7 @@ namespace InversedMatrix_ver3
                 string validRes = Validation.GetErrorInputMsg(size, minValue, maxValue);
                 if (validRes.Length > 0)
                 {
-                    MessageBox.Show(validRes, "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    MessageBox.Show(validRes, @"Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     DialogResult = DialogResult.None;
                     return;
                 }

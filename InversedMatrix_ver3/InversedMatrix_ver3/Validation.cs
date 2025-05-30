@@ -42,7 +42,7 @@ public static class Validation
             
         if (isManual && (minValue < -100 || maxValue > 100))
         {
-            MessageBox.Show("Ваші значення за межами діапазону!", "Помилка", 
+            MessageBox.Show(@"Ваші значення за межами діапазону!", @"Помилка", 
                 MessageBoxButtons.OK, MessageBoxIcon.Error);
             return false;
         }
@@ -51,7 +51,7 @@ public static class Validation
             String errorMsg = GetErrorInputMsg(rows, minValue, maxValue);
             if (errorMsg.Length > 0)
             {
-                MessageBox.Show(errorMsg, "Помилка", 
+                MessageBox.Show(errorMsg, @"Помилка", 
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return false;
             }

@@ -2,28 +2,38 @@ namespace InversedMatrix_ver3
 {
     public static class InversionMethods
     {
-        // BORDERING METHOD (aka Окаймлення)
+        public static int BorderingOperations { get; private set; }
+        public static int BorderingIterations { get; private set; }
+        public static int LupDecompositions { get; private set; }
+        public static int LupBackSubstitutions { get; private set; }
+
+        // To count iterations 
+        public static void ResetCounters()
+        {
+            BorderingOperations = 0;
+            BorderingIterations = 0;
+            LupDecompositions = 0;
+            LupBackSubstitutions = 0;
+        }
+
+        // BORDERING METHOD (Окаймлення)
         public static double[,] InverseByBordering(double[,] A)
         {
+            ResetCounters();
             int n = A.GetLength(0);
             if (n != A.GetLength(1))
                 throw new ArgumentException("Матриця повинна бути квадратною");
 
-            double[,] A_inv = new double[n, n]; // Final inversed matrix
-
             // Start with the inverse of the top-left 1x1 matrix
             double[,] A1 = new double[1, 1];
             A1[0, 0] = 1.0 / A[0, 0];
+            BorderingOperations++; // Division
 
             // Iterative bordering process
             for (int k = 1; k < n; k++)
             {
-                // (k+1)x(k+1) submatrix A_k 
-                double[,] A_k = new double[k + 1, k + 1];
-                for (int i = 0; i <= k; i++)
-                for (int j = 0; j <= k; j++)
-                    A_k[i, j] = A[i, j];
-
+                BorderingIterations++; // (k+1)x(k+1) submatrix A_k
+                
                 // Extract the current inverse B of the k x k block
                 double[,] B = new double[k, k];
                 for (int i = 0; i < k; i++)
@@ -31,8 +41,7 @@ namespace InversedMatrix_ver3
                     B[i, j] = A1[i, j];
 
                 // Extract the last column (u) and last row (v) needed for the bordering formula
-                double[] u = new double[k];
-                double[] v = new double[k];
+                double[] u = new double[k], v = new double[k];
                 for (int i = 0; i < k; i++)
                 {
                     u[i] = A[i, k]; // Column vector from A
@@ -43,16 +52,15 @@ namespace InversedMatrix_ver3
                 double alpha = A[k, k];
                 for (int i = 0; i < k; i++)
                 for (int j = 0; j < k; j++)
+                {
                     alpha -= v[i] * B[i, j] * u[j];
+                    BorderingOperations += 3;
+                }
 
                 if (Math.Abs(alpha) < 1e-10)
                     throw new InvalidOperationException("Матриця вироджена");
 
-                // New (k+1)x(k+1) inverse matrix using bordering formulas
                 double[,] newB = new double[k + 1, k + 1];
-
-                // According to formula
-                // Top-left k x k block: B + (B * v * u^T * B) / alpha
                 for (int i = 0; i < k; i++)
                 for (int j = 0; j < k; j++)
                     newB[i, j] = B[i, j] + OuterProduct(B, v, u, alpha, i, j);
@@ -60,28 +68,31 @@ namespace InversedMatrix_ver3
                 // Last column and last row
                 for (int i = 0; i < k; i++)
                 {
-                    newB[i, k] = -1 * SumVector(B, u, i) / alpha; // Last column
-                    newB[k, i] = -1 * SumVector(B, v, i) / alpha; // Last row
+                    newB[i, k] = -1 * SumVector(B, u, i) / alpha;
+                    newB[k, i] = -1 * SumVector(B, v, i) / alpha;
+                    BorderingOperations += 4;
                 }
 
                 newB[k, k] = 1.0 / alpha;
+                BorderingOperations++;
 
                 // Update A1 to the new inverse
                 A1 = newB;
             }
 
             // Final resulted inverse matrix
-            A_inv = A1;
-            return A_inv;
+            return A1;
         }
 
-        // Outer product adjustment part of the bordering formula
         private static double OuterProduct(double[,] B, double[] v, double[] u, double alpha, int i, int j)
         {
             double sum = 0;
             for (int l = 0; l < v.Length; l++)
             for (int m = 0; m < u.Length; m++)
+            {
                 sum += B[i, l] * v[l] * u[m] * B[m, j];
+                BorderingOperations += 4;
+            }
             return sum / alpha;
         }
 
@@ -90,21 +101,24 @@ namespace InversedMatrix_ver3
         {
             double sum = 0;
             for (int j = 0; j < vec.Length; j++)
+            {
                 sum += B[i, j] * vec[j];
+                BorderingOperations += 2;
+            }
             return sum;
         }
-
 
         // LUP decomposition (LU decomposition with partial pivoting)
         public static double[,] InverseByLup(double[,] A)
         {
-            int n = A.GetLength(0); 
+            ResetCounters();
+            int n = A.GetLength(0);
             if (n != A.GetLength(1))
-                throw new ArgumentException("Матриця повинна бути квадратною"); 
+                throw new ArgumentException("Матриця повинна бути квадратною");
 
             int[] P; // Permutation vector
-            var (L, U, perm) =
-                LupDecompose(A, out P); // LUP decomposition to get L, U, and permutation vector P
+            var (L, U, perm) = LupDecompose(A, out P);
+            LupDecompositions++;
 
             double[,] inv = new double[n, n]; // To hold the inverse matrix
 
@@ -112,7 +126,7 @@ namespace InversedMatrix_ver3
             // Solve A * X = I column by column
             for (int i = 0; i < n; i++)
             {
-                double[] e = new double[n]; 
+                double[] e = new double[n];
                 e[i] = 1;
 
                 // Solve L * y = P * e using forward substitution
@@ -120,6 +134,7 @@ namespace InversedMatrix_ver3
 
                 // Solve U * x = y using backward substitution
                 double[] x = BackwardSubstitution(U, y);
+                LupBackSubstitutions++;
 
                 // Store the solution x as the i-th column of the inverse
                 for (int j = 0; j < n; j++)
@@ -190,7 +205,7 @@ namespace InversedMatrix_ver3
                     L[i, j] = LU[i, j]; // Lower triangular part below the diagonal
             }
 
-            return (L, U, P); 
+            return (L, U, P);
         }
 
         // P --> to a vector b (P * b)
@@ -214,7 +229,6 @@ namespace InversedMatrix_ver3
                 for (int j = 0; j < i; j++)
                     y[i] -= L[i, j] * y[j];
             }
-
             return y;
         }
 
@@ -230,8 +244,26 @@ namespace InversedMatrix_ver3
                     x[i] -= U[i, j] * x[j];
                 x[i] /= U[i, i]; // Divide by the pivot element
             }
-
             return x;
+        }
+
+        // Calculating errors for testing
+        public static double CalculateError(double[,] A, double[,] A_inv)
+        {
+            int n = A.GetLength(0);
+            double error = 0.0;
+
+            for (int i = 0; i < n; i++)
+            for (int j = 0; j < n; j++)
+            {
+                double sum = 0.0;
+                for (int k = 0; k < n; k++)
+                    sum += A[i, k] * A_inv[k, j];
+
+                error += Math.Pow(sum - (i == j ? 1.0 : 0.0), 2);
+            }
+
+            return Math.Sqrt(error);
         }
     }
 }

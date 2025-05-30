@@ -29,6 +29,9 @@ namespace InversedMatrix_ver3
 
         private double[,] _currentMatrix;
         private double[,] _inverseMatrix;
+        private double[,] _tmpMatrix;
+        private double _lupTime;
+        private double _borderTime;
         private int _spacing;
 
         public MainForm()
@@ -36,7 +39,7 @@ namespace InversedMatrix_ver3
             InitializeComponents();
 
             //Appearance of the Window
-            Text = "Matrix Inverse Calculator";
+            Text = @"Matrix Inverse Calculator";
             Size = new Size(900, 460);
             BackColor = _mainBackGColor;
             Font = new Font("Segoe UI", 9);
@@ -44,7 +47,7 @@ namespace InversedMatrix_ver3
 
         private void InitializeComponents()
         {
-            Text = "Matrix Calculator";
+            Text = @"Matrix Calculator";
             Size = new Size(900, 650);
             MinimumSize = new Size(700, 500);
             BackColor = _mainBackGColor;
@@ -53,7 +56,7 @@ namespace InversedMatrix_ver3
             // Menu label
             _lblMenu = new Label
             {
-                Text = "Меню",
+                Text = @"Меню",
                 Location = new Point(20, 20),
                 Font = new Font("Segoe UI", 13, FontStyle.Bold),
                 AutoSize = true,
@@ -76,7 +79,7 @@ namespace InversedMatrix_ver3
             // Matrix labels
             _lblOriginal = new Label
             {
-                Text = "Оригінальна матриця:",
+                Text = @"Оригінальна матриця:",
                 Location = new Point(250, 20),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
@@ -102,7 +105,7 @@ namespace InversedMatrix_ver3
 
             _lblInverse = new Label
             {
-                Text = "Обернена матриця:",
+                Text = @"Обернена матриця:",
                 Location = new Point(555, 20),
                 AutoSize = true,
                 Font = new Font("Segoe UI", 10, FontStyle.Bold),
@@ -127,7 +130,7 @@ namespace InversedMatrix_ver3
             };
             Controls.Add(_gridInverseMatrix);
 
-            int bottomY = 45 + 240 + 20;
+            int bottomY = 305;
 
             _cmbMethod = new ComboBox
             {
@@ -145,7 +148,7 @@ namespace InversedMatrix_ver3
 
             _btnManualInput = new Button
             {
-                Text = "Ручний ввід",
+                Text = @"Ручний ввід",
                 Location = new Point(410, bottomY),
                 Size = new Size(100, 30),
                 BackColor = _btnColor,
@@ -160,7 +163,7 @@ namespace InversedMatrix_ver3
 
             _btnCalculate = new Button
             {
-                Text = "ОБЧИСЛИТИ",
+                Text = @"ОБЧИСЛИТИ",
                 Location = new Point(520, bottomY),
                 Size = new Size(100, 30),
                 BackColor = _btnColor,
@@ -175,7 +178,7 @@ namespace InversedMatrix_ver3
 
             _btnResetMatrix = new Button
             {
-                Text = "СКИНУТИ",
+                Text = @"СКИНУТИ",
                 Location = new Point(630, bottomY),
                 Size = new Size(100, 30),
                 BackColor = Color.FromArgb(160, 100, 100),
@@ -190,7 +193,7 @@ namespace InversedMatrix_ver3
 
             _btnSaveToFile = new Button
             {
-                Text = "Зберегти у файл",
+                Text = @"Зберегти у файл",
                 Location = new Point(555, bottomY + 50),
                 Size = new Size(150, 35),
                 BackColor = _darkBlueBtnColor,
@@ -205,7 +208,7 @@ namespace InversedMatrix_ver3
 
             _btnCompareMethods = new Button
             {
-                Text = "Порівняти методи",
+                Text = @"Порівняти методи",
                 Location = new Point(715, bottomY + 50),
                 Size = new Size(150, 35),
                 BackColor = _darkBlueBtnColor,
@@ -295,7 +298,7 @@ namespace InversedMatrix_ver3
         {
             using (var inputDialog = new Form())
             {
-                inputDialog.Text = "Введіть розмірність матриці";
+                inputDialog.Text = @"Введіть розмірність матриці";
                 inputDialog.Size = new Size(300, 150);
                 inputDialog.FormBorderStyle = FormBorderStyle.FixedDialog;
                 inputDialog.StartPosition = FormStartPosition.CenterParent;
@@ -304,7 +307,7 @@ namespace InversedMatrix_ver3
 
                 var lbl = new Label
                 {
-                    Text = "Розмірність (n x n):",
+                    Text = @"Розмірність (n x n):",
                     Location = new Point(20, 20),
                     AutoSize = true
                 };
@@ -319,7 +322,7 @@ namespace InversedMatrix_ver3
 
                 var btnOk = new Button
                 {
-                    Text = "OK",
+                    Text = @"OK",
                     DialogResult = DialogResult.OK,
                     Location = new Point(80, 60),
                     Size = new Size(80, 30),
@@ -329,7 +332,7 @@ namespace InversedMatrix_ver3
 
                 var btnCancel = new Button
                 {
-                    Text = "Скасувати",
+                    Text = @"Скасувати",
                     DialogResult = DialogResult.Cancel,
                     Location = new Point(170, 60),
                     Size = new Size(80, 30),
@@ -340,7 +343,7 @@ namespace InversedMatrix_ver3
                 // Available size-range for matrix
                 Label lblSizeRange = new Label
                 {
-                    Text = "Діапазон: [2; 10]",
+                    Text = @"Діапазон: [2; 10]",
                     Location = new Point(154, 40),
                     AutoSize = true,
                     Font = new Font("Segoe UI", 8),
@@ -361,7 +364,8 @@ namespace InversedMatrix_ver3
                     int size = (int)numSize.Value;
                     if (size < 2 || size > 10)
                     {
-                        MessageBox.Show("Розмір матриці має бути в межах від 2 до 10.", "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show(@"Розмір матриці має бути в межах від 2 до 10.", 
+                            @"Помилка", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         DialogResult = DialogResult.None;
                         return;
                     }
@@ -425,6 +429,9 @@ namespace InversedMatrix_ver3
             _gridInverseMatrix.Columns.Clear();
             _currentMatrix = null;
             _inverseMatrix = null;
+            _tmpMatrix = null;
+            _borderTime = 0.0;
+            _lupTime = 0.0;
         }
 
         private void Btn_MouseLeave(object? sender, EventArgs e)
@@ -440,8 +447,8 @@ namespace InversedMatrix_ver3
                 // Check matrix availability
                 if (_gridOriginalMatrix.Rows.Count == 0 || _gridOriginalMatrix.Columns.Count == 0)
                 {
-                    MessageBox.Show("Для початку обчислень потрібно ввести або згенерувати матрицю",
-                        "Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    MessageBox.Show(@"Для початку обчислень потрібно ввести або згенерувати матрицю",
+                        @"Помилка", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
@@ -455,7 +462,20 @@ namespace InversedMatrix_ver3
                         _currentMatrix = GetMatrixFromGrid(_gridOriginalMatrix, false);
                         if (!Validation.IsInputValid(_currentMatrix, true))
                             return;
-                        _inverseMatrix = InversionMethods.InverseByLup(_currentMatrix);
+                        
+                        // Measuring time only for Bordering method if matrix is new
+                        if (_tmpMatrix == null || !(_currentMatrix.Cast<double>().SequenceEqual(_tmpMatrix.Cast<double>())))
+                        {
+                            _tmpMatrix = _currentMatrix;
+                            _lupTime = 0.0;
+                        }
+                        
+                        // Measuring time for Bordering method
+                        var watch1 = System.Diagnostics.Stopwatch.StartNew();
+                        _inverseMatrix = InversionMethods.InverseByBordering(_currentMatrix);
+                        watch1.Stop();
+                        _borderTime = watch1.Elapsed.TotalMilliseconds;
+             
                     }
                     else
                     {
@@ -463,18 +483,31 @@ namespace InversedMatrix_ver3
                         _currentMatrix = GetMatrixFromGrid(_gridOriginalMatrix, true);
                         if (!Validation.IsInputValid(_currentMatrix, true))
                             return;
+                        
+                        // Measuring time only for LUP if matrix is new
+                        if (_tmpMatrix == null || !(_currentMatrix.Cast<double>().SequenceEqual(_tmpMatrix.Cast<double>())))
+                        {
+                            _tmpMatrix = _currentMatrix;
+                            _borderTime = 0.0;
+                        }
+                        
+                        // Measuring time for LUP
+                        var watch2 = System.Diagnostics.Stopwatch.StartNew();
                         _inverseMatrix = InversionMethods.InverseByLup(_currentMatrix);
+                        watch2.Stop();
+                        _lupTime = watch2.Elapsed.TotalMilliseconds;
+
                     }
                 }
 
                 // Output the result
                 Matrix.DisplayMatrix(_gridInverseMatrix, _inverseMatrix);
-                MessageBox.Show("Обчислення завершено успішно!", "Результат",
+                MessageBox.Show(@"Обчислення завершено успішно!", @"Результат",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Помилка обчислення: {ex.Message}", "Помилка",
+                MessageBox.Show($@"Помилка обчислення: {ex.Message}", @"Помилка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -490,35 +523,22 @@ namespace InversedMatrix_ver3
             {
                 if (_currentMatrix == null)
                 {
-                    MessageBox.Show("Для порівняння потрібна матриця", "Помилка",
+                    MessageBox.Show(@"Для порівняння потрібна матриця", @"Помилка",
                         MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-
-                // Measuring time for Bordering method
-                var watch1 = System.Diagnostics.Stopwatch.StartNew();
-                var inv1 = InversionMethods.InverseByBordering(_currentMatrix);
-                watch1.Stop();
-                double time1 = watch1.Elapsed.TotalMilliseconds;
-
-                // Measuring time for LUP
-                var watch2 = System.Diagnostics.Stopwatch.StartNew();
-                var inv2 = InversionMethods.InverseByLup(_currentMatrix);
-                watch2.Stop();
-                double time2 = watch2.Elapsed.TotalMilliseconds;
-
                 string result =
                     $"Порівняння методів для матриці {_currentMatrix.GetLength(0)}x{_currentMatrix.GetLength(0)}:\n\n" +
-                    $"Метод окаймлення: {time1:F3} мс\n" +
-                    $"LUP-розклад: {time2:F3} мс\n\n" +
-                    $"Різниця: {Math.Abs(time1 - time2):F3} мс";
-
-                MessageBox.Show(result, "Результати порівняння",
+                    $"Метод окаймлення: {_borderTime:F3} мс\n" +
+                    $"LUP-розклад: {_lupTime:F3} мс\n\n" +
+                    $"Різниця: {Math.Abs(_borderTime - _lupTime):F3} мс";
+                
+                MessageBox.Show(result, @"Результати порівняння",
                     MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Помилка при порівнянні: {ex.Message}", "Помилка",
+                MessageBox.Show($@"Помилка при порівнянні: {ex.Message}", @"Помилка",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
@@ -543,12 +563,12 @@ namespace InversedMatrix_ver3
                     _gridInverseMatrix.Columns.Clear();
                     _inverseMatrix = null;
 
-                    MessageBox.Show($"Згенеровано випадкову матрицю {size}x{size}", "Успіх",
+                    MessageBox.Show($@"Згенеровано випадкову матрицю {size}x{size}", @"Успіх",
                         MessageBoxButtons.OK, MessageBoxIcon.Information);
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Помилка генерації: {ex.Message}", "Помилка",
+                    MessageBox.Show($@"Помилка генерації: {ex.Message}", @"Помилка",
                         MessageBoxButtons.OK, MessageBoxIcon.Error);
                 }
             }
@@ -558,7 +578,7 @@ namespace InversedMatrix_ver3
         {
             if (_inverseMatrix == null)
             {
-                MessageBox.Show("Немає даних для збереження", "Помилка",
+                MessageBox.Show(@"Немає даних для збереження", @"Помилка",
                     MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
@@ -566,8 +586,8 @@ namespace InversedMatrix_ver3
             SaveFileDialog saveFileDialog = new SaveFileDialog
             {
                 // Only txt files!
-                Filter = "Text files (*.txt)|*.txt|All files (*.*)|*.*",
-                Title = "Зберегти матрицю",
+                Filter = @"Text files (*.txt)|*.txt|All files (*.*)|*.*",
+                Title = @"Зберегти матрицю",
                 RestoreDirectory = true
             };
 
@@ -577,13 +597,13 @@ namespace InversedMatrix_ver3
                 FileManager.SaveMatrixToFile(saveFileDialog.FileName, _inverseMatrix, () =>
                     {
                         _btnSaveToFile.Enabled = true;
-                        MessageBox.Show("Матрицю збережено успішно!", "Успіх",
+                        MessageBox.Show(@"Матрицю збережено успішно!", @"Успіх",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                     },
                     error =>
                     {
                         _btnSaveToFile.Enabled = true;
-                        MessageBox.Show(error, "Помилка",
+                        MessageBox.Show(error, @"Помилка",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 );
@@ -594,8 +614,8 @@ namespace InversedMatrix_ver3
         {
             OpenFileDialog openFileDialog = new OpenFileDialog
             {
-                Filter = "Text files (*.txt)|*.txt",
-                Title = "Імпортувати матрицю",
+                Filter = @"Text files (*.txt)|*.txt",
+                Title = @"Імпортувати матрицю",
                 RestoreDirectory = true
             };
 
@@ -614,13 +634,13 @@ namespace InversedMatrix_ver3
                         _gridInverseMatrix.Columns.Clear();
                         _inverseMatrix = null;
                         _btnImportMatrix.Enabled = true;
-                        MessageBox.Show("Матрицю успішно імпортовано!", "Успіх",
+                        MessageBox.Show(@"Матрицю успішно імпортовано!", @"Успіх",
                             MessageBoxButtons.OK, MessageBoxIcon.Information);
                     },
                     error =>
                     {
                         _btnImportMatrix.Enabled = true;
-                        MessageBox.Show(error, "Помилка",
+                        MessageBox.Show(error, @"Помилка",
                             MessageBoxButtons.OK, MessageBoxIcon.Error);
                     }
                 );
@@ -637,7 +657,7 @@ namespace InversedMatrix_ver3
                 "\t1. (A⁻¹)⁻¹ = A\n\n" +
                 "\t2. (AB)⁻¹ = B⁻¹A⁻¹\n\n" +
                 "\t3. (Aᵀ)⁻¹ = (A⁻¹)ᵀ\n\n" +
-                "❗ Обернена матриця існує тільки для квадратних невироджених матриць.", "Довідник",
+                @"❗ Обернена матриця існує тільки для квадратних невироджених матриць.", @"Довідник",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -648,7 +668,7 @@ namespace InversedMatrix_ver3
                             "2. Виберіть метод обчислення\n\n" +
                             "3. Натисніть 'ОБЧИСЛИТИ'\n\n" +
                             "4. Результат з'явиться у полі 'Обернена матриця'\n\n" +
-                            "5. Можете зберегти результат у файл або порівняти методи\n\n", "Інструкція користувача",
+                            "5. Можете зберегти результат у файл або порівняти методи\n\n", @"Інструкція користувача",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -662,7 +682,7 @@ namespace InversedMatrix_ver3
                             "\t\tPA=LU\n\n" +
                             "де P — матриця перестановок (запам’ятовує перестановки рядків для стабільності);\n" +
                             "L — нижня трикутна матриця з 1 на головній діагоналі\n" +
-                            "U — верхня трикутна матриця\n\n", "Довідка про методи",
+                            "U — верхня трикутна матриця\n\n", @"Довідка про методи",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
@@ -678,15 +698,17 @@ namespace InversedMatrix_ver3
                             "Складність кроків:\n" +
                             "-->LUP-розклад - O(n³);\n" +
                             "-->Розв'язання n систем Ly = b та Ux = y - O(n³).\n\n" +
-                            "Підсумкова складність: O(n³)\n\n", "Довідка про часову складність",
+                            "Підсумкова складність: O(n³)\n\n", @"Довідка про часову складність",
                 MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void BtnExit_Click(object? sender, EventArgs e)
         {
-            if (MessageBox.Show("Ви впевнені, що хочете вийти?", "Підтвердження",
+            if (MessageBox.Show(@"Ви впевнені, що хочете вийти?", @"Підтвердження",
                     MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
             {
+                _borderTime = 0.0;
+                _lupTime = 0.0;
                 Close();
             }
         }
