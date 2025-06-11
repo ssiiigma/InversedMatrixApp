@@ -1,5 +1,3 @@
 # InversedMatrixApp
 
-Курсова робота з дисципліни "Основи програмування (ч.2)" на тему "Обернені матриці" 
-
-# Єлізарова Софія ІП-43
+Software written in C# for calculating inverse matrices with a user interface and additional functionality
